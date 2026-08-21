@@ -1,0 +1,75 @@
+# Model & experiment configuration
+
+project:
+  name: ecommerce-fraud-detection
+  version: "1.0"
+  random_seed: 42
+
+data:
+  raw_filename: ecommerce_fraud_detection.csv
+  target: Fraud_Status
+  test_size: 0.15
+  val_size: 0.15
+
+business:
+  # Placeholder costs – refine with real business input
+  cost_false_positive: 5.0      # review / friction cost
+  cost_false_negative: 100.0    # average fraud loss
+
+features:
+  numeric:
+    - Transaction_Amount
+    - Order_Quantity
+    - Customer_Age
+    - Customer_Tenure_Months
+    - Account_Age_Days
+    - Customer_Order_Count
+    - IP_Risk_Score
+    - Velocity_Score
+    - Merchant_Risk_Score
+    - Previous_Chargebacks
+    - Transactions_Last_24H
+    - Transactions_Last_7D
+    - Failed_Payment_Attempts
+    - Login_Anomalies
+    - Discount_Percentage
+    - Transaction_Hour
+    - Day_of_Week
+    - Amount_per_Item
+  binary:
+    - Shipping_Billing_Mismatch
+    - High_Risk_Country
+    - New_Device
+    - VPN_Proxy_Used
+    - Is_Weekend
+  categorical:
+    - Payment_Method
+    - Device_Type
+    - Browser
+    - Operating_System
+    - Product_Category
+    - Customer_Region
+
+model:
+  algorithm: xgboost
+  params:
+    n_estimators:300,
+    random_state:42,
+    objective:binary:logistic,
+    eval_metric:aucpr,
+    max_depth:4,
+    learning_rate:0.05,
+    subsample:0.85,
+    colsample_bytree:0.85,
+    scale_pos_weight:base_scale_pos_weight,
+    tree_method:hist,
+    n_jobs:1
+
+evaluation:
+  primary_metric: average_precision   # PR-AUC
+  secondary_metrics:
+    - roc_auc_score
+    - f1
+    - precision
+    - recall
+  threshold_optimization: cost_sensitive

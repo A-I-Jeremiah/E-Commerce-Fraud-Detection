@@ -1,0 +1,131 @@
+{
+  "threshold": 0.3176667392253876,
+  "features": [
+    "transaction_amount",
+    "order_quantity",
+    "customer_age",
+    "customer_tenure_months",
+    "account_age_days",
+    "customer_order_count",
+    "ip_risk_score",
+    "velocity_score",
+    "merchant_risk_score",
+    "previous_chargebacks",
+    "transactions_last_24h",
+    "transactions_last_7d",
+    "failed_payment_attempts",
+    "login_anomalies",
+    "discount_percentage",
+    "transaction_hour",
+    "amount_per_item",
+    "day_of_week",
+    "payment_method",
+    "device_type",
+    "browser",
+    "operating_system",
+    "product_category",
+    "customer_region",
+    "shipping_billing_mismatch",
+    "high_risk_country",
+    "new_device",
+    "vpn_proxy_used",
+    "is_weekend"
+  ],
+  "numerical_features": [
+    "transaction_amount",
+    "order_quantity",
+    "customer_age",
+    "customer_tenure_months",
+    "account_age_days",
+    "customer_order_count",
+    "ip_risk_score",
+    "velocity_score",
+    "merchant_risk_score",
+    "previous_chargebacks",
+    "transactions_last_24h",
+    "transactions_last_7d",
+    "failed_payment_attempts",
+    "login_anomalies",
+    "discount_percentage",
+    "transaction_hour",
+    "amount_per_item",
+    "day_of_week"
+  ],
+  "categorical_features": [
+    "payment_method",
+    "device_type",
+    "browser",
+    "operating_system",
+    "product_category",
+    "customer_region"
+  ],
+  "binary_features": [
+    "shipping_billing_mismatch",
+    "high_risk_country",
+    "new_device",
+    "vpn_proxy_used",
+    "is_weekend"
+  ],
+  "target_mapping": {
+    "Legitimate": 0,
+    "Fraudulent": 1
+  },
+  "positive_class": "Fraudulent",
+  "minimum_fraud_recall": 0.995,
+  "cost_false_positive": 5.0,
+  "cost_false_negative": 100.0,
+  "best_params": {
+    "classifier__subsample": 0.7,
+    "classifier__scale_pos_weight": 9.03668322506687,
+    "classifier__reg_lambda": 10,
+    "classifier__reg_alpha": 0,
+    "classifier__n_estimators": 800,
+    "classifier__min_child_weight": 7,
+    "classifier__max_depth": 3,
+    "classifier__learning_rate": 0.01,
+    "classifier__gamma": 0.5,
+    "classifier__colsample_bytree": 0.85
+  },
+  "cv_best_fbeta_3": 0.7919380909088908,
+  "metrics": {
+    "validation": {
+      "threshold": 0.3176667392253876,
+      "recall": 0.9964349376114082,
+      "precision": 0.2674641148325359,
+      "fbeta_3": 0.7830228323294579,
+      "roc_auc": 0.8213658895928252,
+      "average_precision": 0.6589043476378358,
+      "business_cost": 7855.0,
+      "confusion_matrix": [
+        [
+          158,
+          1531
+        ],
+        [
+          2,
+          559
+        ]
+      ]
+    },
+    "test": {
+      "threshold": 0.3176667392253876,
+      "recall": 0.9982142857142857,
+      "precision": 0.26900866217516844,
+      "fbeta_3": 0.785332958696263,
+      "roc_auc": 0.818644336432798,
+      "average_precision": 0.6207679723547723,
+      "business_cost": 7695.0,
+      "confusion_matrix": [
+        [
+          171,
+          1519
+        ],
+        [
+          1,
+          559
+        ]
+      ]
+    }
+  },
+  "created_at_utc": "2026-08-21T01:12:11.809046+00:00"
+}
