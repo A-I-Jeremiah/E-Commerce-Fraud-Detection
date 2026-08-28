@@ -5,6 +5,8 @@ All default hyperparameters, paths, constants live here.
 
 from pathlib import Path
 
+from src.data.features import ENGINEERED_FEATURES
+
 # ----------------------- Project Paths --------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -70,9 +72,38 @@ CATEGORICAL_FEATURES = [
     "Customer_Region",
 ]
 
+# ---------------------------------------------------------------------------
+# Engineered features (populated by FeatureEngineer)
+# ---------------------------------------------------------------------------
+ENGINEERED_NUMERIC = [
+    "Log_Transaction_Amount",
+    "Log_Amount_per_Item",
+    "Log_Velocity_Score",
+    "Log_IP_Risk_Score",
+    "Log_Transactions_Last_24H",
+    "Amount_per_Order",
+    "Txn_Velocity_24H_vs_7D",
+    "Failed_Payment_Rate",
+    "IP_x_Velocity",
+    "IP_x_Merchant",
+    "Orders_per_Month",
+    "Hour_Sin",
+    "Hour_Cos",
+    "Dow_Sin",
+    "Dow_Cos",
+]
+
+ENGINEERED_BINARY = [
+    "NewDevice_x_VPN",
+    "Mismatch_x_HighRiskCountry",
+    "Chargeback_x_FailedPayments",
+    "Is_New_Account",
+    "Is_Low_Tenure",
+]
+
 # Features which will be used by the model
 # All features that will be used by the model
-FEATURE_COLS = NUMERIC_FEATURES + BINARY_FEATURES + CATEGORICAL_FEATURES
+FEATURE_COLS = NUMERIC_FEATURES + BINARY_FEATURES + CATEGORICAL_FEATURES + ENGINEERED_FEATURES + ENGINEERED_BINARY
 
 # ---------------------------------------------------------------------------
 # Business / Evaluation defaults
