@@ -72,7 +72,7 @@ Custom `FeatureEngineer` sklearn transformer that creates:
 
 | Category | New Features |
 |----------|--------------|
-| Log transforms | `Log_Transaction_Amount`, `Log_Amount_per_Item` |
+| Log transforms | `Log_Transaction_Amount`, `Log_Amount_per_Item`, `Log_Velocity_Score`, `Log_IP_Risk_Score`, `Log_Transactions_Last_24H` |
 | Ratios | `Amount_per_Order`, `Txn_Velocity_24H_vs_7D`, `Failed_Payment_Rate`, `Orders_per_Month` |
 | Risk interactions | `IP_x_Velocity`, `IP_x_Merchant`, `NewDevice_x_VPN`, `Mismatch_x_HighRiskCountry`, `Chargeback_x_FailedPayments` |
 | Account flags | `Is_New_Account`, `Is_Low_Tenure` |
