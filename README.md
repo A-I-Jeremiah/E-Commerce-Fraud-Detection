@@ -4,16 +4,19 @@ Production-grade end-to-end machine learning pipeline for predicting and detecti
 
 ## Project Status
 
-**Current Phase: Phase 3 – Modeling (XGBoost Primary)** ✅ Completed
+**Current Phase: Phase 4 – Evaluation, Calibration, SHAP & Threshold Finalisation** ✅ Completed
 
-Phases 1–3 are complete. The system now has:
-- Clean data foundation & EDA
+Phases 1–4 are complete. The system now includes:
+
+- Clean data foundation & exploratory analysis
 - Feature engineering + preprocessing pipeline
 - Trained **XGBoost** primary model + Logistic Regression baseline
-- Cost-sensitive threshold selection
-- Versioned model artifacts ready for evaluation and serving
+- Probability calibration (Isotonic)
+- Cost-sensitive final threshold
+- SHAP explainability
+- Production decision configuration ready for serving
 
-**Next:** Phase 4 – Deeper Evaluation, Calibration, SHAP & Threshold Finalisation
+**Next:** Phase 5 – Production Packaging & FastAPI Serving
 
 ---
 
@@ -32,6 +35,9 @@ python scripts/validate_pipeline.py
 
 # Phase 3 – Train models (XGBoost primary + Logistic baseline)
 python scripts/train_model.py
+
+# Phase 4 – Calibration, SHAP, curves & final threshold
+python scripts/evaluate_model.py
 ```
 
 ---
@@ -55,34 +61,47 @@ python scripts/train_model.py
 ```
 fraud detection/
 ├── data/
-│   ├── raw/                          # Immutable original CSV
-│   ├── processed/                    # Train/val/test matrices + pipeline
+│   ├── raw/                              # Immutable original CSV
+│   ├── processed/                        # Train/val/test matrices + pipeline
 │   └── external/
 ├── notebooks/
-│   ├── 01_eda.py                     # Phase 1 EDA + plots
+│   ├── 01_eda.py                         # Phase 1 EDA + plots
 │   └── eda_plots/
 ├── src/
-│   ├── config.py                     # Paths, features, costs, defaults
+│   ├── config.py                         # Paths, features, costs, defaults
 │   ├── data/
-│   │   ├── load.py                   # Loading + time-aware split
-│   │   └── features.py               # FeatureEngineer transformer
+│   │   ├── load.py                       # Loading + time-aware split
+│   │   └── features.py                   # FeatureEngineer transformer
 │   ├── pipeline/
-│   │   └── fraud_pipeline.py         # Full sklearn preprocessing pipeline
+│   │   └── fraud_pipeline.py             # Full sklearn preprocessing pipeline
 │   ├── models/
-│   │   ├── train.py                  # XGBoost + Logistic training
-│   │   └── evaluate.py               # Metrics, cost-sensitive threshold
+│   │   ├── train.py                      # XGBoost + Logistic training
+│   │   ├── evaluate.py                   # Core metrics + cost-sensitive threshold
+│   │   ├── calibration.py                # Isotonic / Platt calibrator (Phase 4)
+│   │   └── explain.py                    # SHAP utilities (Phase 4)
 │   └── utils/
-├── models/                           # Versioned model artifacts
+├── models/                               # Versioned model artifacts
 │   ├── xgboost_latest.json
 │   ├── xgboost_latest_meta.json
+│   ├── calibrator_latest.joblib          # Phase 4
+│   ├── decision_config_latest.json       # Phase 4 – production decision config
 │   └── logistic_*.joblib
-├── api/                              # FastAPI (Phase 5)
+├── reports/                              # Phase 4 evaluation outputs
+│   ├── plots/
+│   │   ├── pr_curve_test.png
+│   │   ├── cost_curve_test.png
+│   │   ├── shap_summary.png
+│   │   └── shap_bar.png
+│   ├── shap_top_features.csv
+│   └── phase4_report_*.json
+├── api/                                  # FastAPI (Phase 5)
 ├── configs/
 │   └── model_config.yaml
 ├── scripts/
-│   ├── process_data.py               # Phase 2 processing
-│   ├── validate_pipeline.py          # Phase 2 validation
-│   └── train_model.py                # Phase 3 training
+│   ├── process_data.py                   # Phase 2
+│   ├── validate_pipeline.py              # Phase 2
+│   ├── train_model.py                    # Phase 3
+│   └── evaluate_model.py                 # Phase 4
 ├── tests/
 ├── docker/
 └── requirements.txt
@@ -90,95 +109,98 @@ fraud detection/
 
 ---
 
-## Phase Summary
+## Phase Summaries
 
 ### Phase 1 – Foundations & EDA ✅
-- Project skeleton and configuration
-- Immutable raw data placement
-- Central `src/config.py` (paths, feature groups, business costs)
-- Data loader with time-aware chronological split
-- Comprehensive EDA (`notebooks/01_eda.py`) with plots
-- Business metric decision: **PR-AUC** primary + cost-sensitive operating point
+- Project skeleton and central configuration (`src/config.py`)
+- Immutable raw data + data loader with time-aware chronological split
+- Comprehensive EDA script and plots
+- Business metric decision: **PR-AUC** as primary metric + cost-sensitive operating point
 
-**Key EDA findings:**
+**Key findings:**
 - Strong signals: `Transaction_Amount`, `Velocity_Score`, `IP_Risk_Score`, `Login_Anomalies`
-- Binary flags with high lift: `Shipping_Billing_Mismatch`, `VPN_Proxy_Used`, `High_Risk_Country`, `New_Device`
-- Fraudulent transactions show significantly higher average amounts and risk scores
-- Clean data (no missing values / duplicates)
+- High-lift binary flags: `Shipping_Billing_Mismatch`, `VPN_Proxy_Used`, `High_Risk_Country`, `New_Device`
+- Clean data (no missing values or duplicates)
 
 ### Phase 2 – Feature Engineering & Preprocessing ✅
-- **`src/data/features.py`**: Custom `FeatureEngineer` transformer adding 17 derived features:
-  - Log transforms (`Log_Transaction_Amount`, `Log_Amount_per_Item`)
-  - Ratios (`Amount_per_Order`, `Txn_Velocity_24H_vs_7D`, `Failed_Payment_Rate`, `Orders_per_Month`)
-  - Risk interactions (`IP_x_Velocity`, `IP_x_Merchant`, `NewDevice_x_VPN`, …)
-  - Account flags (`Is_New_Account`, `Is_Low_Tenure`)
-  - Cyclic time features (`Hour_Sin/Cos`, `Dow_Sin/Cos`)
-- **`src/pipeline/fraud_pipeline.py`**: Full sklearn `Pipeline`
-  - FeatureEngineer → ColumnTransformer (numeric / binary / categorical)
-  - OneHotEncoder with `handle_unknown="ignore"`
-  - Fitted only on train data (no leakage)
-- Artifacts saved to `data/processed/`:
-  - `preprocessing_pipeline.joblib`
-  - `X_train/val/test.parquet`, `y_train/val/test.parquet`
-  - `meta.joblib`
+- `FeatureEngineer` transformer adding 17 derived features (logs, ratios, risk interactions, account flags, cyclic time)
+- Full sklearn `Pipeline` (FeatureEngineer → ColumnTransformer with OneHotEncoder)
+- Fitted only on train data (no leakage)
+- Artifacts: `preprocessing_pipeline.joblib`, `X_*.parquet`, `y_*.parquet`, `meta.joblib`
 
 ### Phase 3 – Modeling (XGBoost Primary) ✅
+- **Primary model:** XGBoost with `scale_pos_weight` + early stopping (monitors `aucpr`)
+- **Baseline:** Logistic Regression (`class_weight="balanced"`)
+- Cost-sensitive threshold search on validation
+- Versioned artifacts: `xgboost_latest.json` + metadata JSON
+- Gain-based feature importance
 
-**Primary model:** XGBoost  
-**Baseline:** Logistic Regression (`class_weight="balanced"`)
+### Phase 4 – Evaluation, Calibration, SHAP & Threshold Finalisation ✅
 
-#### Added / Modified Components
+#### Added Components
 
 | File | Purpose |
 |------|---------|
-| `src/models/train.py` | `train_xgboost()` with `scale_pos_weight` + early stopping; `train_logistic_baseline()` |
-| `src/models/evaluate.py` | PR-AUC, ROC-AUC, F1, Precision, Recall, confusion matrix, **cost-sensitive threshold search** |
-| `scripts/train_model.py` | End-to-end training script: load processed data → train both models → evaluate → save artifacts |
+| `src/models/calibration.py` | `ProbabilityCalibrator` (Isotonic Regression / Platt scaling) + Brier score & log-loss |
+| `src/models/explain.py` | SHAP TreeExplainer helpers, summary/bar plots, top-feature ranking |
+| `scripts/evaluate_model.py` | End-to-end Phase 4 script |
 
-#### Training Details
-- Imbalance handled via `scale_pos_weight = n_neg / n_pos`
-- Early stopping on validation set (monitors `aucpr`)
-- Default hyperparameters: `max_depth=6`, `learning_rate=0.05`, `subsample=0.8`, `colsample_bytree=0.8`, etc.
-- Cost assumptions: **Cost_FP = 5**, **Cost_FN = 100** (tunable)
+#### What Phase 4 Produces
 
-#### Evaluation Focus
-- **Primary metric:** Average Precision (PR-AUC)
-- Secondary: ROC-AUC, Precision, Recall, F1
-- Cost-sensitive threshold selected on **validation** only, then applied to test
-- Full confusion matrix + expected business cost reported
+1. **Probability Calibration**
+   - Isotonic Regression fitted on **validation** predictions only
+   - Improves probability quality (lower Brier score / log-loss)
 
-#### Artifacts Produced (`models/`)
-- `xgboost_YYYYMMDD_HHMMSS.json` – versioned model
-- `xgboost_latest.json` – latest pointer
-- `xgboost_*_meta.json` – metrics, best threshold, feature names, hyperparameters
-- `logistic_*.joblib` – baseline model
+2. **Final Threshold**
+   - Cost-sensitive search (`Cost_FP = 5`, `Cost_FN = 100`) on calibrated validation scores
+   - Threshold frozen for test evaluation and future production use
 
-#### Feature Importance
-Gain-based importance is extracted and mapped back to real feature names (top-20 printed during training).
+3. **Full Evaluation Reports**
+   - Validation & Test metrics at the final threshold
+   - Confusion matrix + expected business cost
+
+4. **Curves**
+   - Precision-Recall curve (test, calibrated)
+   - Expected Cost vs Threshold curve
+
+5. **SHAP Explainability**
+   - Beeswarm summary plot
+   - Mean \|SHAP\| bar plot
+   - Ranked feature list (`shap_top_features.csv`)
+
+6. **Production Decision Artifacts**
+   - `models/calibrator_latest.joblib`
+   - `models/decision_config_latest.json` (model path, calibrator, final threshold, metrics, feature names)
+   - `reports/phase4_report_*.json`
 
 ---
 
-## Business Metrics
+## Business Metrics & Decision Logic
 
 | Metric | Role |
 |--------|------|
-| **PR-AUC (Average Precision)** | Primary ranking metric (best for imbalance) |
+| **PR-AUC (Average Precision)** | Primary ranking metric |
 | ROC-AUC | Secondary |
 | Precision / Recall / F1 | Operating-point metrics |
-| Expected Cost | `FP × 5 + FN × 100` – used to choose threshold |
+| Expected Cost | `FP × 5 + FN × 100` – drives threshold selection |
+| Brier Score / Log-Loss | Calibration quality |
 
-Threshold is optimised on the validation set to minimise expected cost, then frozen for test and future production use.
+**Production decision flow:**
+1. Raw features → preprocessing pipeline
+2. XGBoost → raw probability
+3. Isotonic calibrator → calibrated probability
+4. Compare to `final_threshold` → Fraud / Legitimate
 
 ---
 
 ## Design Principles
 
-- **No leakage**: time-aware splits + preprocessing fitted only on train
-- **Reusable transformers**: FeatureEngineer and the full pipeline can be used at inference time
-- **Imbalance-aware**: `scale_pos_weight` (XGBoost) and `class_weight="balanced"` (Logistic)
-- **Cost-sensitive**: explicit business costs drive threshold selection
-- **Versioned artifacts**: timestamped models + metadata for reproducibility
-- **Production-ready formats**: Parquet, joblib, XGBoost JSON
+- **No leakage**: time-aware splits; preprocessing, calibrator and threshold all fitted/selected on train/validation only
+- **Reusable components**: FeatureEngineer, full pipeline, calibrator and decision config are inference-ready
+- **Imbalance-aware**: `scale_pos_weight` (XGBoost) + cost-sensitive threshold
+- **Explainable**: SHAP values available for every prediction
+- **Versioned & reproducible**: timestamped models, metadata, and decision config
+- **Production formats**: Parquet, joblib, XGBoost JSON
 
 ---
 
@@ -187,33 +209,41 @@ Threshold is optimised on the validation set to minimise expected cost, then fro
 1. **Phase 1** – Foundations & EDA ✅  
 2. **Phase 2** – Feature Engineering & Preprocessing Pipeline ✅  
 3. **Phase 3** – Modeling (XGBoost primary + Logistic baseline) ✅  
-4. **Phase 4** – Evaluation, Calibration, SHAP, Threshold Finalisation  
+4. **Phase 4** – Evaluation, Calibration, SHAP & Threshold Finalisation ✅  
 5. **Phase 5** – Production Packaging & FastAPI Serving  
 6. **Phase 6** – Monitoring, Drift Detection, Retraining  
 7. **Phase 7** – CI/CD, Tests, Hardening  
 
 ---
 
-## How to Reproduce Phase 3
+## How to Reproduce Phases 1–4
 
 ```bash
-# 1. Ensure Phase 2 artifacts exist
-ls data/processed/
+# Phase 1
+python notebooks/01_eda.py
 
-# 2. Train
+# Phase 2
+python scripts/process_data.py
+python scripts/validate_pipeline.py
+
+# Phase 3
 python scripts/train_model.py
 
-# 3. Inspect results
+# Phase 4
+python scripts/evaluate_model.py
+
+# Inspect key outputs
 ls models/
-cat models/xgboost_latest_meta.json
+cat models/decision_config_latest.json
+ls reports/plots/
 ```
 
 ---
 
-## Next Steps (Phase 4)
+## Next Steps (Phase 5)
 
-- Probability calibration (Platt / Isotonic)
-- SHAP explanations for model transparency
-- Precision-Recall & cost curves
-- Final threshold recommendation and documentation
-- Model card
+- Package the full inference pipeline (preprocessing → XGBoost → calibrator → threshold)
+- FastAPI service with `/predict` and `/predict/batch` endpoints
+- Pydantic request/response schemas
+- Docker containerisation
+- Health checks and basic logging
