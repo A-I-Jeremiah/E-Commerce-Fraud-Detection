@@ -121,16 +121,17 @@ VAL_SIZE = 0.15                # of the remaining train portion
 # ---------------------------------------------------------------------------
 DEFAULT_MODEL_PARAMS = {
     "xgboost": {
-        "n_estimators":300,
-        "random_state":42,
-        "objective":"binary:logistic",
-        "eval_metric":"aucpr",
-        "max_depth":4,
-        "learning_rate":0.05,
-        "subsample":0.85,
-        "colsample_bytree":0.85,
-        "tree_method":"hist",
-        "n_jobs":1,
-        "random_state": RANDOM_SEED
+        "random_state": RANDOM_SEED,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "subsample": 0.7,
+        "reg_lambda": 10,
+        "reg_alpha": 0,
+        "n_estimators": 800,
+        "min_child_weight": 7,
+        "max_depth": 3,
+        "learning_rate": 0.01,
+        "gamma": 0.5,
+        "colsample_bytree": 0.85
     }
 }

@@ -1,0 +1,164 @@
+{
+  "timestamp": "20260901_020942",
+  "model_type": "xgboost",
+  "best_threshold": 0.1457286432160804,
+  "feature_names": [
+    "Transaction_Amount",
+    "Order_Quantity",
+    "Customer_Age",
+    "Customer_Tenure_Months",
+    "Account_Age_Days",
+    "Customer_Order_Count",
+    "IP_Risk_Score",
+    "Velocity_Score",
+    "Merchant_Risk_Score",
+    "Previous_Chargebacks",
+    "Transactions_Last_24H",
+    "Transactions_Last_7D",
+    "Failed_Payment_Attempts",
+    "Login_Anomalies",
+    "Discount_Percentage",
+    "Transaction_Hour",
+    "Day_of_Week",
+    "Amount_per_Item",
+    "Log_Transaction_Amount",
+    "Log_Amount_per_Item",
+    "Log_Velocity_Score",
+    "Log_IP_Risk_Score",
+    "Log_Transactions_Last_24H",
+    "Amount_per_Order",
+    "Txn_Velocity_24H_vs_7D",
+    "Failed_Payment_Rate",
+    "IP_x_Velocity",
+    "IP_x_Merchant",
+    "Orders_per_Month",
+    "Hour_Sin",
+    "Hour_Cos",
+    "Dow_Sin",
+    "Dow_Cos",
+    "Shipping_Billing_Mismatch",
+    "High_Risk_Country",
+    "New_Device",
+    "VPN_Proxy_Used",
+    "Is_Weekend",
+    "NewDevice_x_VPN",
+    "Mismatch_x_HighRiskCountry",
+    "Chargeback_x_FailedPayments",
+    "Is_New_Account",
+    "Is_Low_Tenure",
+    "Payment_Method_Bank Transfer",
+    "Payment_Method_Cash on Delivery",
+    "Payment_Method_Credit Card",
+    "Payment_Method_Debit Card",
+    "Payment_Method_Digital Wallet",
+    "Device_Type_Desktop",
+    "Device_Type_Mobile",
+    "Device_Type_Tablet",
+    "Browser_Chrome",
+    "Browser_Edge",
+    "Browser_Firefox",
+    "Browser_Other",
+    "Browser_Safari",
+    "Operating_System_Android",
+    "Operating_System_Linux",
+    "Operating_System_Windows",
+    "Operating_System_iOS",
+    "Operating_System_macOS",
+    "Product_Category_Beauty",
+    "Product_Category_Books",
+    "Product_Category_Electronics",
+    "Product_Category_Fashion",
+    "Product_Category_Grocery",
+    "Product_Category_Home & Kitchen",
+    "Product_Category_Sports",
+    "Product_Category_Toys",
+    "Customer_Region_Central",
+    "Customer_Region_East",
+    "Customer_Region_North",
+    "Customer_Region_South",
+    "Customer_Region_West"
+  ],
+  "metrics": {
+    "Logistic Regression": {
+      "val": {
+        "average_precision": 0.6671998738429306,
+        "roc_auc": 0.8215792865749433,
+        "pr_auc": 0.6667844539489785,
+        "f1_score": 0.458295142071494,
+        "precision": 0.2986857825567503,
+        "recall": 0.984251968503937,
+        "confusion_matrix": [
+          [
+            231,
+            1174
+          ],
+          [
+            8,
+            500
+          ]
+        ]
+      },
+      "test": {
+        "average_precision": 0.6479290533069394,
+        "roc_auc": 0.819977557653614,
+        "pr_auc": 0.6475883144532546,
+        "f1_score": 0.4355162715950181,
+        "precision": 0.27895007720020587,
+        "recall": 0.9926739926739927,
+        "confusion_matrix": [
+          [
+            303,
+            1401
+          ],
+          [
+            4,
+            542
+          ]
+        ]
+      },
+      "best_threshold": 0.11557788944723618
+    },
+    "XGBoost": {
+      "val": {
+        "average_precision": 0.6601621028993718,
+        "roc_auc": 0.8123630453666603,
+        "pr_auc": 0.659781962047239,
+        "f1_score": 0.4478009773434029,
+        "precision": 0.2891566265060241,
+        "recall": 0.9921259842519685,
+        "confusion_matrix": [
+          [
+            166,
+            1239
+          ],
+          [
+            4,
+            504
+          ]
+        ]
+      },
+      "test": {
+        "average_precision": 0.622481365476683,
+        "roc_auc": 0.8145604395604396,
+        "pr_auc": 0.6220796181890199,
+        "f1_score": 0.4263322884012539,
+        "precision": 0.2711864406779661,
+        "recall": 0.9963369963369964,
+        "confusion_matrix": [
+          [
+            242,
+            1462
+          ],
+          [
+            2,
+            544
+          ]
+        ]
+      },
+      "best_threshold": 0.1457286432160804
+    }
+  },
+  "cost_fp": 5.0,
+  "cost_fn": 100.0,
+  "random_seed": 42
+}

@@ -31,7 +31,7 @@ def main():
     print(f"Test  : {test_df.shape[0]:,} rows  | Fraud rate: {test_df[TARGET_COL].mean():.2%}")
 
     # 2. Build pipeline (no scaling needed for tree models)
-    pipeline = build_preprocessing_pipeline(scale_numeric=False)
+    pipeline = build_preprocessing_pipeline(scale_numeric=True)
 
     # 3. Fit on train only
     print("\nFitting preprocessing pipeline on train set...")
