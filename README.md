@@ -4,9 +4,9 @@ Production-grade end-to-end machine learning pipeline for predicting and detecti
 
 ## Project Status
 
-**Current Phase: Phase 4 – Evaluation, Calibration, SHAP & Threshold Finalisation** ✅ Completed
+**Current Phase: Phase 5 – Production Packaging & FastAPI Serving** ✅ Completed
 
-Phases 1–4 are complete. The system now includes:
+Phases 1–5 are complete. The system is now a fully operational production service:
 
 - Clean data foundation & exploratory analysis
 - Feature engineering + preprocessing pipeline
@@ -14,9 +14,10 @@ Phases 1–4 are complete. The system now includes:
 - Probability calibration (Isotonic)
 - Cost-sensitive final threshold
 - SHAP explainability
-- Production decision configuration ready for serving
+- **FastAPI serving layer** with single & batch prediction endpoints
+- Docker support for deployment
 
-**Next:** Phase 5 – Production Packaging & FastAPI Serving
+**Next:** Phase 6 – Monitoring, Drift Detection & Retraining
 
 ---
 
@@ -38,6 +39,17 @@ python scripts/train_model.py
 
 # Phase 4 – Calibration, SHAP, curves & final threshold
 python scripts/evaluate_model.py
+
+# Phase 5 – Start the API (local development)
+python scripts/run_api.py
+# Then open http://localhost:8000/docs
+```
+
+### Docker (optional)
+
+```bash
+cd docker
+docker compose up --build
 ```
 
 ---
@@ -77,33 +89,35 @@ fraud detection/
 │   ├── models/
 │   │   ├── train.py                      # XGBoost + Logistic training
 │   │   ├── evaluate.py                   # Core metrics + cost-sensitive threshold
-│   │   ├── calibration.py                # Isotonic / Platt calibrator (Phase 4)
-│   │   └── explain.py                    # SHAP utilities (Phase 4)
+│   │   ├── calibration.py                # Isotonic / Platt calibrator
+│   │   └── explain.py                    # SHAP utilities
 │   └── utils/
 ├── models/                               # Versioned model artifacts
 │   ├── xgboost_latest.json
 │   ├── xgboost_latest_meta.json
-│   ├── calibrator_latest.joblib          # Phase 4
-│   ├── decision_config_latest.json       # Phase 4 – production decision config
+│   ├── calibrator_latest.joblib
+│   ├── decision_config_latest.json       # Final threshold + metadata
 │   └── logistic_*.joblib
-├── reports/                              # Phase 4 evaluation outputs
+├── reports/                              # Evaluation outputs (Phase 4)
 │   ├── plots/
-│   │   ├── pr_curve_test.png
-│   │   ├── cost_curve_test.png
-│   │   ├── shap_summary.png
-│   │   └── shap_bar.png
-│   ├── shap_top_features.csv
-│   └── phase4_report_*.json
-├── api/                                  # FastAPI (Phase 5)
+│   └── shap_top_features.csv
+├── api/                                  # Phase 5 – FastAPI service
+│   ├── __init__.py
+│   ├── main.py                           # FastAPI app + endpoints
+│   ├── schemas.py                        # Pydantic request/response models
+│   └── inference.py                      # Production inference engine
 ├── configs/
 │   └── model_config.yaml
 ├── scripts/
 │   ├── process_data.py                   # Phase 2
 │   ├── validate_pipeline.py              # Phase 2
 │   ├── train_model.py                    # Phase 3
-│   └── evaluate_model.py                 # Phase 4
-├── tests/
+│   ├── evaluate_model.py                 # Phase 4
+│   └── run_api.py                        # Phase 5 – local server
 ├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── tests/
 └── requirements.txt
 ```
 
@@ -112,66 +126,65 @@ fraud detection/
 ## Phase Summaries
 
 ### Phase 1 – Foundations & EDA ✅
-- Project skeleton and central configuration (`src/config.py`)
-- Immutable raw data + data loader with time-aware chronological split
-- Comprehensive EDA script and plots
-- Business metric decision: **PR-AUC** as primary metric + cost-sensitive operating point
-
-**Key findings:**
-- Strong signals: `Transaction_Amount`, `Velocity_Score`, `IP_Risk_Score`, `Login_Anomalies`
-- High-lift binary flags: `Shipping_Billing_Mismatch`, `VPN_Proxy_Used`, `High_Risk_Country`, `New_Device`
-- Clean data (no missing values or duplicates)
+- Project skeleton and central configuration
+- Immutable raw data + time-aware data loader
+- Comprehensive EDA and business metric decision (PR-AUC + cost-sensitive threshold)
 
 ### Phase 2 – Feature Engineering & Preprocessing ✅
-- `FeatureEngineer` transformer adding 17 derived features (logs, ratios, risk interactions, account flags, cyclic time)
-- Full sklearn `Pipeline` (FeatureEngineer → ColumnTransformer with OneHotEncoder)
-- Fitted only on train data (no leakage)
-- Artifacts: `preprocessing_pipeline.joblib`, `X_*.parquet`, `y_*.parquet`, `meta.joblib`
+- 17 engineered features (logs, ratios, risk interactions, account flags, cyclic time)
+- Full sklearn Pipeline (FeatureEngineer → ColumnTransformer)
+- Artifacts: `preprocessing_pipeline.joblib`, Parquet matrices, metadata
 
 ### Phase 3 – Modeling (XGBoost Primary) ✅
-- **Primary model:** XGBoost with `scale_pos_weight` + early stopping (monitors `aucpr`)
-- **Baseline:** Logistic Regression (`class_weight="balanced"`)
+- XGBoost with `scale_pos_weight` + early stopping
+- Logistic Regression baseline
 - Cost-sensitive threshold search on validation
-- Versioned artifacts: `xgboost_latest.json` + metadata JSON
-- Gain-based feature importance
+- Versioned model artifacts (`xgboost_latest.json` + metadata)
 
 ### Phase 4 – Evaluation, Calibration, SHAP & Threshold Finalisation ✅
+- Isotonic probability calibration
+- Final cost-sensitive threshold locked
+- SHAP explainability (summary + bar plots)
+- Production decision config (`decision_config_latest.json`)
+- PR curve, cost curve, and evaluation reports
+
+### Phase 5 – Production Packaging & FastAPI Serving ✅
 
 #### Added Components
 
 | File | Purpose |
 |------|---------|
-| `src/models/calibration.py` | `ProbabilityCalibrator` (Isotonic Regression / Platt scaling) + Brier score & log-loss |
-| `src/models/explain.py` | SHAP TreeExplainer helpers, summary/bar plots, top-feature ranking |
-| `scripts/evaluate_model.py` | End-to-end Phase 4 script |
+| `api/schemas.py` | Pydantic models for strict input validation and response typing |
+| `api/inference.py` | `FraudInferenceEngine` – loads pipeline + model + calibrator + threshold |
+| `api/main.py` | FastAPI application with lifespan loading, CORS, and endpoints |
+| `scripts/run_api.py` | Local development server (uvicorn + hot reload) |
+| `docker/Dockerfile` | Production container image |
+| `docker/docker-compose.yml` | Easy local/prod orchestration with health checks |
 
-#### What Phase 4 Produces
+#### API Endpoints
 
-1. **Probability Calibration**
-   - Isotonic Regression fitted on **validation** predictions only
-   - Improves probability quality (lower Brier score / log-loss)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Service info |
+| `GET` | `/health` | Health check (model loaded, calibrator loaded, current threshold) |
+| `POST` | `/predict` | Score a single transaction |
+| `POST` | `/predict/batch` | Score up to 500 transactions |
+| `GET` | `/docs` | Interactive Swagger UI |
 
-2. **Final Threshold**
-   - Cost-sensitive search (`Cost_FP = 5`, `Cost_FN = 100`) on calibrated validation scores
-   - Threshold frozen for test evaluation and future production use
+#### Inference Flow (Production)
 
-3. **Full Evaluation Reports**
-   - Validation & Test metrics at the final threshold
-   - Confusion matrix + expected business cost
+1. Raw transaction features (validated by Pydantic)
+2. Preprocessing pipeline (same as training – no train/serve skew)
+3. XGBoost → raw probability
+4. Isotonic calibrator → calibrated probability
+5. Compare to final threshold → `is_fraud` decision
 
-4. **Curves**
-   - Precision-Recall curve (test, calibrated)
-   - Expected Cost vs Threshold curve
-
-5. **SHAP Explainability**
-   - Beeswarm summary plot
-   - Mean \|SHAP\| bar plot
-   - Ranked feature list (`shap_top_features.csv`)
-
-6. **Production Decision Artifacts**
-   - `models/calibrator_latest.joblib`
-   - `models/decision_config_latest.json` (model path, calibrator, final threshold, metrics, feature names)
-   - `reports/phase4_report_*.json`
+#### Key Design Decisions
+- All artifacts loaded **once** at startup via FastAPI lifespan
+- Input strictly validated before any computation
+- Same preprocessing pipeline used in training and serving
+- Threshold and calibrator come from Phase 4 decision config
+- Docker support with health checks and optional volume mounts for model updates
 
 ---
 
@@ -179,28 +192,25 @@ fraud detection/
 
 | Metric | Role |
 |--------|------|
-| **PR-AUC (Average Precision)** | Primary ranking metric |
+| **PR-AUC** | Primary ranking metric |
 | ROC-AUC | Secondary |
 | Precision / Recall / F1 | Operating-point metrics |
 | Expected Cost | `FP × 5 + FN × 100` – drives threshold selection |
 | Brier Score / Log-Loss | Calibration quality |
 
-**Production decision flow:**
-1. Raw features → preprocessing pipeline
-2. XGBoost → raw probability
-3. Isotonic calibrator → calibrated probability
-4. Compare to `final_threshold` → Fraud / Legitimate
+**Production decision:**  
+`calibrated_probability >= final_threshold` → Fraud
 
 ---
 
 ## Design Principles
 
-- **No leakage**: time-aware splits; preprocessing, calibrator and threshold all fitted/selected on train/validation only
-- **Reusable components**: FeatureEngineer, full pipeline, calibrator and decision config are inference-ready
-- **Imbalance-aware**: `scale_pos_weight` (XGBoost) + cost-sensitive threshold
-- **Explainable**: SHAP values available for every prediction
-- **Versioned & reproducible**: timestamped models, metadata, and decision config
-- **Production formats**: Parquet, joblib, XGBoost JSON
+- **No leakage**: time-aware splits; preprocessing, calibrator and threshold fitted/selected only on train/validation
+- **Train/serve consistency**: identical preprocessing pipeline at inference
+- **Reusable & versioned artifacts**: models, calibrator and decision config are explicitly versioned
+- **Explainable**: SHAP available for offline analysis
+- **Production-ready API**: validation, health checks, structured logging, Docker
+- **Imbalance-aware**: `scale_pos_weight` + cost-sensitive threshold
 
 ---
 
@@ -210,40 +220,79 @@ fraud detection/
 2. **Phase 2** – Feature Engineering & Preprocessing Pipeline ✅  
 3. **Phase 3** – Modeling (XGBoost primary + Logistic baseline) ✅  
 4. **Phase 4** – Evaluation, Calibration, SHAP & Threshold Finalisation ✅  
-5. **Phase 5** – Production Packaging & FastAPI Serving  
+5. **Phase 5** – Production Packaging & FastAPI Serving ✅  
 6. **Phase 6** – Monitoring, Drift Detection, Retraining  
 7. **Phase 7** – CI/CD, Tests, Hardening  
 
 ---
 
-## How to Reproduce Phases 1–4
+## How to Run the Full System
 
 ```bash
-# Phase 1
-python notebooks/01_eda.py
+# 1. Install dependencies
+pip install -r requirements.txt
 
-# Phase 2
+# 2. Reproduce training pipeline (if needed)
 python scripts/process_data.py
-python scripts/validate_pipeline.py
-
-# Phase 3
 python scripts/train_model.py
-
-# Phase 4
 python scripts/evaluate_model.py
 
-# Inspect key outputs
-ls models/
-cat models/decision_config_latest.json
-ls reports/plots/
+# 3. Start the API
+python scripts/run_api.py
+
+# 4. Test
+curl http://localhost:8000/health
+# Open http://localhost:8000/docs for interactive testing
 ```
 
 ---
 
-## Next Steps (Phase 5)
+## Example Prediction Request
 
-- Package the full inference pipeline (preprocessing → XGBoost → calibrator → threshold)
-- FastAPI service with `/predict` and `/predict/batch` endpoints
-- Pydantic request/response schemas
-- Docker containerisation
-- Health checks and basic logging
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction": {
+      "Transaction_Amount": 120.0,
+      "Order_Quantity": 1,
+      "Payment_Method": "Credit Card",
+      "Device_Type": "Mobile",
+      "Browser": "Chrome",
+      "Operating_System": "Android",
+      "Product_Category": "Electronics",
+      "Customer_Region": "West",
+      "Customer_Age": 29,
+      "Customer_Tenure_Months": 8,
+      "Account_Age_Days": 120,
+      "Customer_Order_Count": 3,
+      "IP_Risk_Score": 55.0,
+      "Velocity_Score": 62.0,
+      "Merchant_Risk_Score": 48.0,
+      "Previous_Chargebacks": 1,
+      "Transactions_Last_24H": 4,
+      "Transactions_Last_7D": 9,
+      "Failed_Payment_Attempts": 2,
+      "Login_Anomalies": 1,
+      "Discount_Percentage": 15,
+      "Shipping_Billing_Mismatch": 1,
+      "High_Risk_Country": 0,
+      "New_Device": 1,
+      "VPN_Proxy_Used": 1,
+      "Is_Weekend": 0,
+      "Transaction_Hour": 2,
+      "Day_of_Week": 5,
+      "Amount_per_Item": 120.0
+    }
+  }'
+```
+
+---
+
+## Next Steps (Phase 6)
+
+- Prediction & feature logging
+- Data drift detection (PSI / KS on key features)
+- Concept drift / performance monitoring
+- Automated retraining triggers and approval gates
+- Basic alerting
