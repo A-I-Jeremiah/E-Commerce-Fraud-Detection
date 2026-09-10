@@ -3,7 +3,7 @@ services:
     name: E-Commerce Fraud Detection API
     runtime: python
     plan: free                    # change to starter/standard later
-    buildCommand: pip install -r Requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION

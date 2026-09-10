@@ -1,7 +1,7 @@
 .PHONY: install eda process train evaluate api monitor test lint clean
 
 install:
-	pip install -r Requirements.txt
+	pip install -r requirements.txt
 
 eda:
 	python notebooks/01_eda.py
