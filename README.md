@@ -4,9 +4,11 @@ Production-grade end-to-end machine learning pipeline for predicting and detecti
 
 ## Project Status
 
-**Current Phase: Phase 6 – Monitoring, Drift Detection & Retraining** ✅ Completed
+**Backend Development Complete** ✅  
 
-Phases 1–6 are complete. The system is a fully operational, monitored production service:
+**Phases 1–7 finished.** The system is a fully operational, tested, monitored, and production-ready fraud detection backend.
+
+### What the system includes
 
 - Clean data foundation & exploratory analysis
 - Feature engineering + preprocessing pipeline
@@ -16,9 +18,10 @@ Phases 1–6 are complete. The system is a fully operational, monitored producti
 - SHAP explainability
 - FastAPI serving layer (single & batch prediction)
 - Docker support
-- **Prediction logging, data drift detection, performance monitoring & retrain triggers**
+- Prediction logging, data drift detection, performance monitoring & retrain triggers
+- Unit & integration tests, CI workflow, hardening checklist, and model card
 
-**Next:** Phase 7 – CI/CD, Tests & Hardening
+**Optional next step:** Streamlit operations / analyst console (frontend layer)
 
 ---
 
@@ -28,25 +31,23 @@ Phases 1–6 are complete. The system is a fully operational, monitored producti
 # From project root
 pip install -r requirements.txt
 
-# Phase 1 – Exploratory Data Analysis
+# Full pipeline
 python notebooks/01_eda.py
-
-# Phase 2 – Feature engineering + preprocessing
 python scripts/process_data.py
-python scripts/validate_pipeline.py
-
-# Phase 3 – Train models
 python scripts/train_model.py
-
-# Phase 4 – Calibration, SHAP & final threshold
 python scripts/evaluate_model.py
 
-# Phase 5 – Start the API
+# Start API
 python scripts/run_api.py
 # → http://localhost:8000/docs
 
-# Phase 6 – Run monitoring / drift detection
+# Monitoring
 python scripts/monitor.py
+
+# Tests
+make test
+# or
+pytest tests/unit -v
 ```
 
 ### Docker
@@ -95,28 +96,33 @@ fraud detection/
 │   │   ├── evaluate.py
 │   │   ├── calibration.py
 │   │   └── explain.py
-│   ├── monitoring/                     # Phase 6
-│   │   ├── __init__.py
-│   │   ├── logger.py                   # Prediction / feature logging
-│   │   ├── drift.py                    # PSI + KS drift detection
-│   │   ├── performance.py              # Live performance metrics
-│   │   └── retrain.py                  # Retrain trigger logic
+│   ├── monitoring/
+│   │   ├── logger.py
+│   │   ├── drift.py
+│   │   ├── performance.py
+│   │   └── retrain.py
 │   └── utils/
-├── models/
+├── models/                             # Versioned artifacts
 │   ├── xgboost_latest.json
 │   ├── calibrator_latest.joblib
 │   ├── decision_config_latest.json
 │   └── ...
 ├── reports/
-│   ├── plots/                          # PR, cost, SHAP plots
-│   └── monitoring/                     # Drift reports (Phase 6)
-├── logs/                               # Phase 6
-│   ├── predictions/                    # Daily JSONL prediction logs
-│   └── retrain_triggers/               # Retrain decision records
-├── api/
+│   ├── plots/
+│   └── monitoring/
+├── logs/
+│   ├── predictions/
+│   └── retrain_triggers/
+├── api/                                # FastAPI service
 │   ├── main.py
 │   ├── schemas.py
-│   └── inference.py                    # Integrated with prediction logger
+│   └── inference.py
+├── tests/
+│   ├── unit/
+│   └── integration/
+├── docs/
+│   ├── HARDENING.md
+│   └── MODEL_CARD.md
 ├── configs/
 ├── scripts/
 │   ├── process_data.py
@@ -124,67 +130,69 @@ fraud detection/
 │   ├── train_model.py
 │   ├── evaluate_model.py
 │   ├── run_api.py
-│   └── monitor.py                      # Phase 6 monitoring job
+│   └── monitor.py
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
-├── tests/
+├── .github/workflows/
+│   └── ci.yml
+├── Makefile
+├── pytest.ini
 └── requirements.txt
 ```
 
 ---
 
-## Phase Summaries
+## Phase Summaries (Backend Complete)
 
-### Phase 1 – Foundations & EDA ✅
-- Project skeleton, central config, time-aware data loader
-- Full EDA and business metric decision (PR-AUC + cost-sensitive threshold)
+| Phase | Status | Summary |
+|-------|--------|---------|
+| **1. Foundations & EDA** | ✅ | Project skeleton, config, time-aware loader, full EDA, business metrics |
+| **2. Feature Engineering & Preprocessing** | ✅ | 17 engineered features, sklearn Pipeline, train-only fitting, Parquet artifacts |
+| **3. Modeling** | ✅ | XGBoost (primary) + Logistic baseline, cost-sensitive threshold, versioned models |
+| **4. Evaluation, Calibration, SHAP** | ✅ | Isotonic calibration, locked threshold, SHAP, decision config |
+| **5. Production Packaging & Serving** | ✅ | FastAPI (`/predict`, `/predict/batch`, `/health`), Docker, inference engine |
+| **6. Monitoring & Retraining** | ✅ | Prediction logging, PSI/KS drift, performance checks, retrain triggers |
+| **7. CI/CD, Tests & Hardening** | ✅ | Unit + integration tests, GitHub Actions CI, Makefile, hardening checklist, model card |
 
-### Phase 2 – Feature Engineering & Preprocessing ✅
-- 17 engineered features + full sklearn Pipeline
-- Train-only fitting, Parquet artifacts, reusable preprocessing pipeline
+---
 
-### Phase 3 – Modeling (XGBoost Primary) ✅
-- XGBoost with `scale_pos_weight` + early stopping
-- Logistic baseline, cost-sensitive threshold, versioned model artifacts
+## Phase 7 – What Was Added
 
-### Phase 4 – Evaluation, Calibration, SHAP & Threshold Finalisation ✅
-- Isotonic calibration, final locked threshold, SHAP explainability
-- Production decision config (`decision_config_latest.json`)
+| Component | Description |
+|-----------|-------------|
+| `tests/unit/` | Tests for feature engineering, metrics, and drift detection |
+| `tests/integration/` | FastAPI health and predict endpoint tests |
+| `pytest.ini` | Pytest configuration |
+| `.github/workflows/ci.yml` | CI pipeline (install → lint → unit tests) |
+| `Makefile` | One-command shortcuts for the entire workflow |
+| `docs/HARDENING.md` | Security, operational, and deployment checklist |
+| `docs/MODEL_CARD.md` | Model documentation (intended use, limitations, ethics) |
 
-### Phase 5 – Production Packaging & FastAPI Serving ✅
-- FastAPI app (`/predict`, `/predict/batch`, `/health`)
-- Pydantic validation, inference engine, Docker support
-- Startup loading of pipeline + model + calibrator + threshold
+---
 
-### Phase 6 – Monitoring, Drift Detection & Retraining ✅
+## Core Capabilities
 
-#### Added Components
+### Scoring
+- Real-time single and batch prediction
+- Calibrated probabilities + final fraud decision
+- Identical preprocessing path in training and serving (no train/serve skew)
 
-| File | Purpose |
-|------|---------|
-| `src/monitoring/logger.py` | Daily JSONL logging of every prediction + features |
-| `src/monitoring/drift.py` | Population Stability Index (PSI) + Kolmogorov-Smirnov tests |
-| `src/monitoring/performance.py` | Live performance metrics + degradation checks (when labels exist) |
-| `src/monitoring/retrain.py` | Rule-based retrain trigger and decision logging |
-| `scripts/monitor.py` | One-command monitoring job |
+### Explainability
+- SHAP values (instance-level and global)
+- Feature importance and contribution analysis
 
-#### Key Capabilities
+### Monitoring
+- Automatic prediction logging
+- Data drift detection (PSI + KS)
+- Performance degradation checks (when labels are available)
+- Rule-based retrain triggers
 
-- **Prediction logging** – every API call is recorded under `logs/predictions/`
-- **Data drift detection** – PSI & KS on high-signal features vs training distribution
-- **Drift severity** – PSI < 0.1 (stable), 0.1–0.25 (moderate), > 0.25 (significant)
-- **Performance monitoring** – ready for labelled production windows (PR-AUC drop detection)
-- **Retrain triggers** – automatic decision when drift or performance degradation is detected; decisions stored in `logs/retrain_triggers/`
-- **API integration** – `FraudInferenceEngine` automatically logs predictions
-
-#### Typical Monitoring Workflow
-
-1. API serves traffic → predictions logged automatically
-2. Run `python scripts/monitor.py` periodically (or via cron/scheduler)
-3. Review drift report in `reports/monitoring/`
-4. If `should_retrain = true`, launch a new training cycle (Phase 3 → 4) and promote new `*_latest` artifacts
-5. Restart API (or rely on volume mounts) to pick up the new model
+### Operations
+- Health endpoint
+- Dockerised deployment
+- Versioned model artifacts with easy rollback
+- CI tests and hardening guidance
 
 ---
 
@@ -207,48 +215,84 @@ Raw features → Preprocessing → XGBoost → Isotonic calibration → `probabi
 
 ## Design Principles
 
-- **No leakage** – time-aware splits; all fitting/selection on train/validation only
-- **Train/serve consistency** – identical preprocessing pipeline at inference
-- **Observable** – every prediction is logged for drift & retraining
+- **No leakage** – time-aware splits; all fitting and threshold selection on train/validation only
+- **Train/serve consistency** – same preprocessing pipeline at inference
+- **Observable** – every prediction logged for drift analysis and retraining
 - **Actionable monitoring** – clear drift thresholds and retrain triggers
-- **Versioned artifacts** – models, calibrator and decision config are explicit
-- **Production-ready** – validation, health checks, Docker, structured logging
+- **Versioned & reproducible** – explicit model, calibrator, and decision-config artifacts
+- **Tested & hardened** – unit/integration tests, CI, security checklist
+- **Production-ready API** – validation, health checks, structured logging, Docker
 
 ---
 
-## Phase Roadmap
-
-1. **Phase 1** – Foundations & EDA ✅  
-2. **Phase 2** – Feature Engineering & Preprocessing Pipeline ✅  
-3. **Phase 3** – Modeling (XGBoost primary + Logistic baseline) ✅  
-4. **Phase 4** – Evaluation, Calibration, SHAP & Threshold Finalisation ✅  
-5. **Phase 5** – Production Packaging & FastAPI Serving ✅  
-6. **Phase 6** – Monitoring, Drift Detection & Retraining ✅  
-7. **Phase 7** – CI/CD, Tests & Hardening  
-
----
-
-## How to Run Monitoring
+## Common Commands (Makefile)
 
 ```bash
-# Ensure the API has served some traffic (predictions are logged automatically)
-
-# Run drift detection + retrain decision
-python scripts/monitor.py
-
-# Inspect outputs
-ls logs/predictions/
-ls logs/retrain_triggers/
-ls reports/monitoring/
+make install    # Install dependencies
+make eda        # Run EDA
+make process    # Feature engineering + preprocessing
+make train      # Train models
+make evaluate   # Calibration, SHAP, final threshold
+make api        # Start FastAPI server
+make monitor    # Run drift detection + retrain decision
+make test       # Run tests
+make lint       # Lint check
+make clean      # Remove caches
 ```
 
 ---
 
-## Next Steps (Phase 7)
+## API Endpoints
 
-- Unit & integration tests
-- CI pipeline (lint, tests, model regression checks)
-- Pre-commit hooks / code quality
-- Security hardening (input limits, rate limiting, secrets)
-- Final documentation & model card
-- Deployment checklist
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Service info |
+| `GET` | `/health` | Health check |
+| `POST` | `/predict` | Score one transaction |
+| `POST` | `/predict/batch` | Score up to 500 transactions |
+| `GET` | `/docs` | Interactive Swagger UI |
+
+---
+
+## How to Reproduce the Full Backend
+
+```bash
+pip install -r requirements.txt
+
+python notebooks/01_eda.py
+python scripts/process_data.py
+python scripts/train_model.py
+python scripts/evaluate_model.py
+
+python scripts/run_api.py          # API
+python scripts/monitor.py          # Monitoring
+
+pytest tests/unit -v               # Tests
+```
+
+---
+
+## Optional Next Step – Streamlit Frontend
+
+A Streamlit operations console can be built on top of this backend to provide:
+
+- Interactive single & batch scoring
+- SHAP explanations
+- Drift and monitoring dashboards
+- Threshold / cost exploration lab
+- Data explorer and model card views
+
+The backend is complete and stable; any UI layer can consume the existing inference engine or the FastAPI service.
+
+---
+
+## Documentation
+
+- `docs/MODEL_CARD.md` – model details, intended use, limitations
+- `docs/HARDENING.md` – security and production readiness checklist
+- This README – full system overview
+
+---
+
+**Backend development is complete.**  
+The fraud detection system is ready for deployment, monitoring, and optional frontend extension.
