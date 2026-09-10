@@ -13,6 +13,7 @@ import pandas as pd
 import xgboost as xgb
 
 from src.config import MODELS_DIR, PROCESSED_DATA_DIR
+from src.monitoring.logger import prediction_logger
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +107,13 @@ class FraudInferenceEngine:
                 "threshold_used": self.threshold,
                 "model_version": "xgboost_latest",
             })
+
+        # Log for monitoring
+        try:
+            prediction_logger.log_batch(records, results)
+        except Exception as e:
+            logger.warning(f"Failed to log predictions: {e}")
+
         return results
 
 
