@@ -40,11 +40,13 @@ def compute_metrics(y_true: np.ndarray, y_prob: np.ndarray, threshold: float = 0
     pr_auc = auc(recall, precision)
 
     # Compute metrics
+    f1 = f1_score(y_true, y_pred)
     metrics = {
         "average_precision": average_precision_score(y_true, y_prob),
         "roc_auc": roc_auc_score(y_true, y_prob),
         "pr_auc": pr_auc,
-        "f1_score": f1_score(y_true, y_pred),
+        "f1_score": f1,
+        "f1": f1,
         "precision": precision_score(y_true, y_pred),
         "recall": recall_score(y_true, y_pred),
         "confusion_matrix": confusion_matrix(y_true, y_pred)
