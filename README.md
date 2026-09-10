@@ -29,7 +29,7 @@ Production-grade end-to-end machine learning pipeline for predicting and detecti
 
 ```bash
 # From project root
-pip install -r requirements.txt
+pip install -r Requirements.txt
 
 # Full pipeline
 python notebooks/01_eda.py
@@ -138,7 +138,7 @@ fraud detection/
 │   └── ci.yml
 ├── Makefile
 ├── pytest.ini
-└── requirements.txt
+└── Requirements.txt
 ```
 
 ---
@@ -257,7 +257,7 @@ make clean      # Remove caches
 ## How to Reproduce the Full Backend
 
 ```bash
-pip install -r requirements.txt
+pip install -r Requirements.txt
 
 python notebooks/01_eda.py
 python scripts/process_data.py
